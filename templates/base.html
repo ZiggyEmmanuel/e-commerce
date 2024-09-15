@@ -1,0 +1,231 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My E-Commerce Site{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for dropdown menu */
+        #dropdown-menu {
+            display: none;
+            top: 100%; /* Ensure the dropdown starts right below the parent */
+        }
+        /* Display the dropdown on hover */
+        .group:hover #dropdown-menu {
+            display: block;
+        }
+        /* Add this new rule */
+        .group::after {
+            content: '';
+            position: absolute;
+            bottom: -10px; /* Adjust this value as needed */
+            left: 0;
+            right: 0;
+            height: 10px; /* This creates an invisible bridge */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+
+    <!-- Header -->
+    <header class="bg-white shadow fixed w-full z-50">
+        <div class="max-w-full mx-auto px-2 sm:px-4 lg:px-6">
+            <nav class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <a href="{% url 'home' %}" class="flex-shrink-0">
+                    <img src="{% static 'assets/img/tee.png' %}" alt="Logo" class="h-14 w-20">
+                </a>
+
+                <!-- Search Form -->
+                <form action="{% url 'product:search_results' %}" method="GET" class="flex-grow max-w-48 mx-2 sm:mx-4">
+                    <div class="relative flex items-center">
+                        <input type="text" name="q" placeholder="Search products..." class="w-full px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        <button type="submit" class="absolute right-2">
+                            <i class="fas fa-search text-sm"></i>
+                        </button>
+                    </div>
+                </form>
+                
+
+                <!-- Links Section for larger screens -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}text-blue-800{% else %}text-blue-600{% endif %} hover:bg-gray-100 px-4 py-2">
+                        Home
+                    </a>
+                    <a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}text-blue-800{% else %}text-blue-600{% endif %} hover:bg-gray-100 px-4 py-2">About</a>
+                    <a href="{% url 'contact' %}" class="{% if request.resolver_match.url_name == 'contact' %}text-blue-800{% else %}text-blue-600{% endif %} hover:bg-gray-100 px-4 py-2">Contact Us</a>
+                    
+                    <!-- Products Dropdown -->
+                    <div class="relative group">
+                        <a href="{% url 'product:product_list' %}" class="{% if 'product' in request.resolver_match.app_name %}text-blue-800{% else %}text-blue-600{% endif %} hover:bg-gray-100 px-4 py-2 flex items-center">
+                            Products
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </a>
+                        <ul id="dropdown-menu" class="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-lg z-10">
+                            {% for category in categories %}
+                            <li>
+                                <a href="{% url 'product:product_list_by_category' category.slug %}" class="block px-4 py-2 text-gray-800 hover:bg-gray-200">
+                                    {{ category.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <a href="{% url 'order:cart_view' %}" class="{% if request.resolver_match.url_name == 'cart_view' %}text-blue-800{% else %}text-blue-600{% endif %} hover:bg-gray-100 px-4 py-2">
+                        <i class="fas fa-shopping-cart"></i> ({{ cart_item_count }})
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}text-blue-800{% else %}text-blue-600{% endif %} hover:bg-gray-100 px-4 py-2">
+                            <i class="fas fa-user"></i> Account
+                        </a>
+                        <form method="post" action="{% url 'logout' %}" class="inline-block">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition duration-300">Logout</button>
+                        </form>                    
+                    {% else %}
+                        <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}text-blue-800{% else %}text-blue-600{% endif %} hover:bg-gray-100 px-4 py-2">Login</a>
+                        <a href="{% url 'register' %}" class="{% if request.resolver_match.url_name == 'register' %}text-blue-800{% else %}text-blue-600{% endif %} hover:bg-gray-100 px-4 py-2">Register</a>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile menu and cart -->
+                <div class="flex items-center space-x-2 md:hidden">
+                    <a href="{% url 'order:cart_view' %}" class="text-blue-600 flex items-center text-sm">
+                        <i class="fas fa-shopping-cart"></i> ({{ cart_item_count }})
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="text-blue-600 flex items-center text-sm">
+                            <i class="fas fa-user"></i>
+                        </a>
+                    {% endif %}
+                    <!-- Hamburger Icon for Mobile -->
+                    <button id="menu-btn" class="text-blue-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden">
+            <ul id="menu" class="hidden bg-white shadow-lg rounded-lg z-50">
+                <li>
+                    <a href="{% url 'home' %}" class="block px-4 py-2 text-blue-600 hover:bg-gray-100 text-sm">Home</a>
+                </li>
+                <li>
+                    <a href="{% url 'about' %}" class="block px-4 py-2 text-blue-600 hover:bg-gray-100 text-sm">About</a>
+                </li>
+                <li>
+                    <a href="{% url 'contact' %}" class="block px-4 py-2 text-blue-600 hover:bg-gray-100 text-sm">Contact Us</a>
+                </li>
+                <li class="relative">
+                    <div class="flex items-center px-4 py-2 text-blue-600 hover:bg-gray-100">
+                        <a href="{% url 'product:product_list' %}" class="pr-2 text-sm">Products</a>
+                        <button onclick="toggleMobileDropdown(event)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <ul id="mobile-dropdown-menu" class="hidden bg-gray-50 rounded-lg">
+                        {% for category in categories %}
+                        <li>
+                            <a href="{% url 'product:product_list_by_category' category.slug %}" class="block px-6 py-2 text-blue-600 hover:bg-gray-200 text-sm">
+                                {{ category.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% if user.is_authenticated %}
+                <li>
+                    <form method="post" action="{% url 'logout' %}" class="block px-4 py-2">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full text-left bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300 text-sm">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                        </button>
+                    </form>
+                </li>
+                {% else %}
+                    <li>
+                        <a href="{% url 'login' %}" class="block px-4 py-2 text-blue-600 hover:bg-gray-100 text-sm">Login</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'register' %}" class="block px-4 py-2 text-blue-600 hover:bg-gray-100 text-sm">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </header>
+
+    <main class="pt-24 px-2 sm:px-4">
+        {% block content %}
+        <!-- Content from child templates will be inserted here -->
+        {% endblock %}
+    </main>
+    
+    <!-- Footer content remains unchanged -->
+    <footer class="bg-black text-white py-8">
+        <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-6 md:px-0">
+            <div>
+                <h3 class="text-xl font-semibold mb-4">Download our app</h3>
+                <p class="text-sm mb-4">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                <div class="flex space-x-4 w-28">
+                    <img src="{% static 'assets/img/gplay1.png' %}" alt="Google Play">
+                    <img src="{% static 'assets/img/app-storre.png' %}" alt="App Store">
+                </div>
+            </div>
+            <div>
+                <img src="{% static 'assets/img/tee.png' %}" alt="Logo" class=" w-40 h-32 mb-4">
+                <p class="text-sm">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Et tenetur sunt numquam.</p>
+            </div>
+            <div class="md:col-span-2 md:grid md:grid-cols-2 md:gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Useful Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-blue-400">Coupons</a></li>
+                        <li><a href="#" class="hover:text-blue-400">Blog Post</a></li>
+                        <li><a href="#" class="hover:text-blue-400">Return Policy</a></li>
+                        <li><a href="#" class="hover:text-blue-400">Join Affiliate</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Contact Us</h3>
+                    <ul class="space-y-2">
+                        <li><a href="mailto:support@example.com" class="hover:text-blue-400">support@example.com</a></li>
+                        <li><a href="tel:+123456789" class="hover:text-blue-400">+1 234 567 89</a></li>
+                        <li><a href="#" class="hover:text-blue-400">123 Street Name, City, Country</a></li>
+                        <li><a href="#" class="hover:text-blue-400">Follow us on Social Media</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <hr class="border-gray-600 my-8">
+        <p class="text-center text-sm">&copy; 2024 My E-Commerce Site. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // JavaScript to toggle the mobile menu
+        document.getElementById('menu-btn').addEventListener('click', function() {
+            document.getElementById('menu').classList.toggle('hidden');
+        });
+
+        // JavaScript to handle dropdown menu for smaller screens
+        function toggleMobileDropdown(event) {
+            event.preventDefault();
+            const dropdown = event.target.closest('li').querySelector('#mobile-dropdown-menu');
+            dropdown.classList.toggle('hidden');
+        }
+    </script>
+
+</body>
+</html>

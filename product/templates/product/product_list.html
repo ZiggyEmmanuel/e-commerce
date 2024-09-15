@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Product List{% endblock %}
+
+{% block content %}
+    <!-- Page Title and Filter Button Section -->
+    <div class="flex justify-between items-center mb-8 mt-16">
+        <h2 class="text-2xl font-semibold">
+            Products{% if category %} in "{{ category.name }}"{% endif %}
+        </h2>
+        <div class="relative">
+            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" onclick="document.getElementById('filterForm').classList.toggle('hidden')">
+                Filter Products
+            </button>
+            <div id="filterForm" class="absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-lg shadow-lg p-4 hidden">
+                <form method="get" action="." class="space-y-4">
+                    <div>
+                        <label for="id_min_price" class="block text-sm font-medium text-gray-700">Min Price</label>
+                        <input type="number" name="min_price" id="id_min_price" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="id_max_price" class="block text-sm font-medium text-gray-700">Max Price</label>
+                        <input type="number" name="max_price" id="id_max_price" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="discount" id="id_discount" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                        <label for="id_discount" class="ml-2 block text-sm font-medium text-gray-700">Only Discounts</label>
+                    </div>
+                    <div>
+                        <label for="id_sort_by" class="block text-sm font-medium text-gray-700">Sort By</label>
+                        <select name="sort_by" id="id_sort_by" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="price">Price (Low to High)</option>
+                            <option value="-price">Price (High to Low)</option>
+                            <option value="name">Name (A to Z)</option>
+                            <option value="-name">Name (Z to A)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Apply Filters</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {% for product in page_obj.object_list %}
+        <div class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col">
+            {% if product.images.exists %}
+                <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover mb-4">
+            {% endif %}
+            <a href="{% url 'product:product_detail' id=product.id slug=product.slug %}">
+                <h3 class="text-lg font-semibold mb-2">{{ product.name }}</h3>
+            </a>
+            <p class="text-gray-600 mb-2">Price: ${{ product.price }}</p>
+            {% if product.discount_price %}
+                <p class="text-red-500 mb-2">Discount Price: ${{ product.discount_price }}</p>
+            {% endif %}
+            
+            <!-- Spacer to push the add to cart and quantity to the bottom -->
+            <div class="flex-grow"></div>
+            
+            <!-- Add to Cart Form -->
+            <form action="{% url 'order:add_to_cart' product.id %}" method="post" class="flex space-x-2 mt-4">
+                {% csrf_token %}
+                <label for="quantity_{{ product.id }}" class="sr-only">Quantity</label>
+                <input type="number" id="quantity_{{ product.id }}" name="quantity" min="1" value="1" class="w-16 px-2 py-1 border rounded-lg">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                    Add to Cart
+                </button>
+            </form>
+        </div>
+    {% empty %}
+        <p class="text-gray-600">No products available.</p>
+    {% endfor %}
+</div>
+
+
+<!-- Pagination Controls -->
+<div class="pagination my-6 flex justify-center">
+    <ul class="inline-flex items-center space-x-2">
+        {% if page_obj.has_previous %}
+            <li>
+                <a href="?page=1&{{ query_params.urlencode }}" 
+                   class="px-3 py-1 border rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                    &laquo; First
+                </a>
+            </li>
+            <li>
+                <a href="?page={{ page_obj.previous_page_number }}&{{ query_params.urlencode }}" 
+                   class="px-3 py-1 border rounded-lg bg-gray-300 hover:bg-gray-400 text-gray-800">
+                    Previous
+                </a>
+            </li>
+        {% endif %}
+        
+        <li class="px-3 py-1 border rounded-lg bg-gray-200 text-gray-700">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li>
+                <a href="?page={{ page_obj.next_page_number }}&{{ query_params.urlencode }}" 
+                   class="px-3 py-1 border rounded-lg bg-gray-300 hover:bg-gray-400 text-gray-800">
+                    Next
+                </a>
+            </li>
+            <li>
+                <a href="?page={{ page_obj.paginator.num_pages }}&{{ query_params.urlencode }}" 
+                   class="px-3 py-1 border rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                    Last &raquo;
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+
+{% endblock %}
