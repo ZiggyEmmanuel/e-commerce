@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-djz$qg6drn@7r@t@k*^@c$ateneq2wx8l)xnf0(!6ig$_h^7fa'
+SECRET_KEY = '#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -52,8 +52,8 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
-STRIPE_TEST_PUBLIC_KEY = 'pk_test_51PiJAM2LkMHoGersJhVFrgDlqC8vh8fhyMA6npdiYHp6j7ii9m8dViZ5vRHDdGubjdf1RblM3AaY6Hr6KfKQzjSZ00UPS79x0Y'
-STRIPE_TEST_SECRET_KEY = 'sk_test_51PiJAM2LkMHoGersTADgb5ExvWtxQc8CGFvlJaLziIHaP4egHDPujSpcHgjoR1XryEh9LVu6SQLjD9uorQXVQ7Yc00aovjKX4v'
+STRIPE_TEST_PUBLIC_KEY = '#'
+STRIPE_TEST_SECRET_KEY = '#'
 
 
 
